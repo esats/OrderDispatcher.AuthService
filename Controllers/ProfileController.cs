@@ -29,5 +29,26 @@ namespace OrderDispatcher.AuthService.Controllers
         {
             return await _profileService.GetOneAsync(userId, ct);
         }
+
+        [HttpPost("saveAddress")]
+        public async Task<Response<Address>> SaveAddress([FromBody] AddressSaveModel request)
+        {
+            var userId = GetUser();
+            return await _profileService.SaveAddressAsync(request, userId);
+        }
+
+        [HttpGet("getAddress/{addressId:int}")]
+        public async Task<Response<Address>> GetAddress([FromRoute] int addressId, CancellationToken ct)
+        {
+            var userId = GetUser();
+            return await _profileService.GetAddressAsync(addressId, userId, ct);
+        }
+
+        [HttpGet("getAllAddresses")]
+        public async Task<Response<List<Address>>> GetAllAddresses(CancellationToken ct)
+        {
+            var userId = GetUser();
+            return await _profileService.GetAddressesAsync(userId, ct);
+        }
     }
 }
