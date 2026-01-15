@@ -1,10 +1,11 @@
-﻿using OrderDispatcher.AuthService.Entities;
-using OrderDispatcher.AuthService.Models;
-using OrderDispatcher.AuthService.Services;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using OrderDispatcher.AuthService.Entities;
+using OrderDispatcher.AuthService.Models;
+using OrderDispatcher.AuthService.Services;
+using OrderDispatcher.CatalogService.API.Base;
 using System.Net;
 using System.Runtime.Intrinsics.X86;
 
@@ -12,22 +13,25 @@ namespace OrderDispatcher.AuthService.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController : ControllerBase
+public class AuthController : APIControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly TokenService _tokenService;
+    private readonly ProfileService _profileService;
 
     public AuthController(UserManager<ApplicationUser> userManager,
                           RoleManager<IdentityRole> roleManager,
-                         TokenService tokenService)
+                         TokenService tokenService, ProfileService profileService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _tokenService = tokenService;
+        _profileService = profileService;
     }
 
     [HttpPost("register")]
+    [AllowAnonymous]
     public async Task<Response<HttpStatusCode>> Register([FromBody] RegisterModel request)
     {
         Response<HttpStatusCode> response = new();
@@ -74,9 +78,14 @@ public class AuthController : ControllerBase
                 return response;
             }
 
-            if (await _roleManager.RoleExistsAsync("user"))
-                await _userManager.AddToRoleAsync(user, "user");
+            //if (await _roleManager.RoleExistsAsync("user"))
+            //    await _userManager.AddToRoleAsync(user, "user");
 
+            ProfileSaveModel profileSaveModel = new ProfileSaveModel();
+            profileSaveModel.FirstName = request.FirstName;
+            profileSaveModel.LastName = request.LastName;
+
+            await _profileService.SaveAsync(profileSaveModel, user.Id);
         }
         catch (Exception e)
         {
@@ -140,7 +149,9 @@ public class AuthController : ControllerBase
 
             response.Value = new AuthResultModel
             {
-                BearerToken = token
+                UserId = user.Id,
+                BearerToken = token,
+                Email = user.Email
             };
 
             response.IsSuccess = true;
@@ -155,4 +166,6 @@ public class AuthController : ControllerBase
             return response;
         }
     }
+
+
 }

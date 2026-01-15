@@ -36,6 +36,7 @@ var jwtSection = builder.Configuration.GetSection("JwtTokenOptions");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<ProfileService>();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

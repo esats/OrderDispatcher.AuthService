@@ -3,7 +3,13 @@
 namespace OrderDispatcher.AuthService.Models
 {
     public class RegisterModel
-    {  
+    {
+        [Required, MinLength(2), MaxLength(32)]
+        public string FirstName { get; init; } = default!;
+
+        [Required, MinLength(3), MaxLength(64)]
+        public string LastName { get; init; } = default!;
+
         [Required, MinLength(3), MaxLength(32)]
         public string Username { get; init; } = default!;
 
