@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Options;
+using RabbitMQ.Client;
 using Scalar.AspNetCore;
 using System.Text;
 
@@ -31,12 +33,25 @@ builder.Services
     .AddSignInManager();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtTokenOptions"));
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMQ"));
 
 var jwtSection = builder.Configuration.GetSection("JwtTokenOptions");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
 
 builder.Services.AddScoped<TokenService>();
-builder.Services.AddScoped<ProfileService>();
+builder.Services.AddSingleton<IConnection>(sp =>
+{
+    var options = sp.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
+    var factory = new ConnectionFactory
+    {
+        HostName = options.HostName,
+        Port = options.Port,
+        UserName = options.UserName,
+        Password = options.Password,
+        VirtualHost = options.VirtualHost
+    };
+    return factory.CreateConnection();
+});
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

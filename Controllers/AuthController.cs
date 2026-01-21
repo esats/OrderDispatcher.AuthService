@@ -8,6 +8,7 @@ using OrderDispatcher.AuthService.Services;
 using OrderDispatcher.CatalogService.API.Base;
 using System.Net;
 using System.Runtime.Intrinsics.X86;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace OrderDispatcher.AuthService.Controllers;
 
@@ -18,16 +19,14 @@ public class AuthController : APIControllerBase
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly TokenService _tokenService;
-    private readonly ProfileService _profileService;
 
     public AuthController(UserManager<ApplicationUser> userManager,
                           RoleManager<IdentityRole> roleManager,
-                         TokenService tokenService, ProfileService profileService)
+                         TokenService tokenService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _tokenService = tokenService;
-        _profileService = profileService;
     }
 
     [HttpPost("register")]
@@ -81,11 +80,6 @@ public class AuthController : APIControllerBase
             //if (await _roleManager.RoleExistsAsync("user"))
             //    await _userManager.AddToRoleAsync(user, "user");
 
-            ProfileSaveModel profileSaveModel = new ProfileSaveModel();
-            profileSaveModel.FirstName = request.FirstName;
-            profileSaveModel.LastName = request.LastName;
-
-            await _profileService.SaveAsync(profileSaveModel, user.Id);
         }
         catch (Exception e)
         {
