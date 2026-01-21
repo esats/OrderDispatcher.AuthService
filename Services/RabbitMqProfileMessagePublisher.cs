@@ -26,54 +26,61 @@ namespace OrderDispatcher.AuthService.Services
 
         public Task PublishProfileCreatedAsync(ProfileModel profile, CancellationToken ct = default)
         {
-
-            if (string.IsNullOrWhiteSpace(_options.QueueName))
+            try
             {
-                throw new InvalidOperationException("RabbitMQ queue name is not configured.");
-            }
+                if (string.IsNullOrWhiteSpace(_options.QueueName))
+                {
+                    throw new InvalidOperationException("RabbitMQ queue name is not configured.");
+                }
 
-            if (string.IsNullOrWhiteSpace(_options.ExchangeName))
+                if (string.IsNullOrWhiteSpace(_options.ExchangeName))
+                {
+                    throw new InvalidOperationException("RabbitMQ exchange name is not configured.");
+                }
+
+                if (string.IsNullOrWhiteSpace(_options.RoutingKey))
+                {
+                    throw new InvalidOperationException("RabbitMQ routing key is not configured.");
+                }
+
+                using var channel = _connection.CreateModel();
+
+                channel.ExchangeDeclare(
+                    exchange: _options.ExchangeName,
+                    type: ExchangeType.Topic,
+                    durable: true,
+                    autoDelete: false,
+                    arguments: null);
+
+                channel.QueueDeclare(
+                    queue: _options.QueueName,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null);
+
+                channel.QueueBind(
+                    queue: _options.QueueName,
+                    exchange: _options.ExchangeName,
+                    routingKey: _options.RoutingKey);
+
+                var body = JsonSerializer.SerializeToUtf8Bytes(profile, JsonOptions);
+                var properties = channel.CreateBasicProperties();
+                properties.Persistent = true;
+
+                channel.BasicPublish(
+                    exchange: _options.ExchangeName,
+                    routingKey: _options.RoutingKey,
+                    basicProperties: properties,
+                    body: body);
+
+                return Task.CompletedTask;
+            }
+            catch (Exception e)
             {
-                throw new InvalidOperationException("RabbitMQ exchange name is not configured.");
+                throw e;
             }
-
-            if (string.IsNullOrWhiteSpace(_options.RoutingKey))
-            {
-                throw new InvalidOperationException("RabbitMQ routing key is not configured.");
-            }
-
-            using var channel = _connection.CreateModel();
-
-            channel.ExchangeDeclare(
-                exchange: _options.ExchangeName,
-                type: ExchangeType.Topic,
-                durable: true,
-                autoDelete: false,
-                arguments: null);
-
-            channel.QueueDeclare(
-                queue: _options.QueueName,
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null);
-
-            channel.QueueBind(
-                queue: _options.QueueName,
-                exchange: _options.ExchangeName,
-                routingKey: _options.RoutingKey);
-
-            var body = JsonSerializer.SerializeToUtf8Bytes(profile, JsonOptions);
-            var properties = channel.CreateBasicProperties();
-            properties.Persistent = true;
-
-            channel.BasicPublish(
-                exchange: _options.ExchangeName,
-                routingKey: _options.RoutingKey,
-                basicProperties: properties,
-                body: body);
-
-            return Task.CompletedTask;
+            
         }
     }
 }

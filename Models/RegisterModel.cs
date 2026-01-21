@@ -18,5 +18,6 @@ namespace OrderDispatcher.AuthService.Models
 
         [Required, MinLength(6), MaxLength(128)]
         public string Password { get; init; } = default!;
+        public int UserType { get; init; } = 0;
     }
 }

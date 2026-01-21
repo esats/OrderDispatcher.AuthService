@@ -63,6 +63,13 @@ public class AuthController : APIControllerBase
                 return response;
             }
 
+            if (request.UserType == 0)
+            {
+                response.IsSuccess = false;
+                response.Message = "No userType.";
+                return response;
+            }
+
             var user = new ApplicationUser
             {
                 UserName = username,
