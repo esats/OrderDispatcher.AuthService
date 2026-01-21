@@ -39,6 +39,7 @@ var jwtSection = builder.Configuration.GetSection("JwtTokenOptions");
 var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!));
 
 builder.Services.AddScoped<TokenService>();
+builder.Services.AddScoped<IProfileMessagePublisher, RabbitMqProfileMessagePublisher>();
 builder.Services.AddSingleton<IConnection>(sp =>
 {
     var options = sp.GetRequiredService<IOptions<RabbitMqOptions>>().Value;
