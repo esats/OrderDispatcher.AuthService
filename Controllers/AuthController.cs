@@ -63,10 +63,10 @@ public class AuthController : APIControllerBase
                 return response;
             }
 
-            if (request.UserType == 0)
+            if (request.UserType < 1 || request.UserType > 4)
             {
                 response.IsSuccess = false;
-                response.Message = "No userType.";
+                response.Message = "Invalid userType.";
                 return response;
             }
 
@@ -82,6 +82,37 @@ public class AuthController : APIControllerBase
                 response.Message = result.Errors.ToList()[0].ToString();
                 response.IsSuccess = false;
 
+                return response;
+            }
+
+            var roleName = request.UserType switch
+            {
+                1 => "customer",
+                2 => "driver",
+                3 => "store",
+                4 => "admin",
+                _ => null
+            };
+
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                response.IsSuccess = false;
+                response.Message = "Invalid userType.";
+                return response;
+            }
+
+            if (!await _roleManager.RoleExistsAsync(roleName))
+            {
+                response.IsSuccess = false;
+                response.Message = "Role not found.";
+                return response;
+            }
+
+            var addToRoleResult = await _userManager.AddToRoleAsync(user, roleName);
+            if (!addToRoleResult.Succeeded)
+            {
+                response.Message = addToRoleResult.Errors.ToList()[0].ToString();
+                response.IsSuccess = false;
                 return response;
             }
 

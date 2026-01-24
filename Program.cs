@@ -49,7 +49,9 @@ builder.Services.AddSingleton<IConnection>(sp =>
         Port = options.Port,
         UserName = options.UserName,
         Password = options.Password,
-        VirtualHost = options.VirtualHost
+        VirtualHost = options.VirtualHost,
+        AutomaticRecoveryEnabled = true,
+        NetworkRecoveryInterval = TimeSpan.FromSeconds(30)
     };
     return factory.CreateConnection();
 });
