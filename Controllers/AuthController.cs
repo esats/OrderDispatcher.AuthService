@@ -122,7 +122,7 @@ public class AuthController : APIControllerBase
                 Username = username,
                 Email = email,
                 FirstName = request.FirstName,
-                UserRole = request.UserType
+                UserType = request.UserType
             };
 
             await _publisher.PublishProfileCreatedAsync(profileModel);
