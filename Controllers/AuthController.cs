@@ -122,6 +122,7 @@ public class AuthController : APIControllerBase
                 Username = username,
                 Email = email,
                 FirstName = request.FirstName,
+                LastName = request.LastName,
                 UserType = request.UserType
             };
 
