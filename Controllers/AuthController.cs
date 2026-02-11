@@ -6,6 +6,7 @@ using OrderDispatcher.AuthService.Entities;
 using OrderDispatcher.AuthService.Models;
 using OrderDispatcher.AuthService.Services;
 using OrderDispatcher.CatalogService.API.Base;
+using StackExchange.Redis;
 using System.Net;
 
 namespace OrderDispatcher.AuthService.Controllers;
@@ -18,16 +19,19 @@ public class AuthController : APIControllerBase
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly TokenService _tokenService;
     private readonly IProfileMessagePublisher _publisher;
+    private readonly IConnectionMultiplexer _redis;
 
     public AuthController(UserManager<ApplicationUser> userManager,
                           RoleManager<IdentityRole> roleManager,
                          TokenService tokenService,
-                         IProfileMessagePublisher publisher)
+                         IProfileMessagePublisher publisher,
+                         IConnectionMultiplexer redis)
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _tokenService = tokenService;
         _publisher = publisher;
+        _redis = redis;
     }
 
     [HttpPost("register")]
@@ -187,6 +191,13 @@ public class AuthController : APIControllerBase
 
             // Create JWT
             var token = await _tokenService.CreateAsync(user, ct);
+
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles.Contains("shopper", StringComparer.OrdinalIgnoreCase))
+            {
+                var db = _redis.GetDatabase();
+                await db.StringSetAsync($"shopper:{user.Id}", user.Id);
+            }
 
             response.Value = new AuthResultModel
             {
