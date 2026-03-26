@@ -1,0 +1,6 @@
+@OrderDispatcher.AuthService_HostAddress = http://localhost:7000
+
+GET {{OrderDispatcher.AuthService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
